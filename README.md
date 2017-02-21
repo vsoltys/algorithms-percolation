@@ -1,2 +1,2 @@
 # algorithms-percolation
-https://www.coursera.org/learn/algorithms-part1/home/week/1
+http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
