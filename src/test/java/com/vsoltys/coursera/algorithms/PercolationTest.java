@@ -1,13 +1,13 @@
 package com.vsoltys.coursera.algorithms;
 
-import static org.junit.Assert.assertTrue;
-
+import edu.princeton.cs.algs4.StdRandom;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 public class PercolationTest {
-    public static final int SIDE_SIZE = 3;
+    public static final int SIDE_SIZE = 100;
 
     private Percolation percolation;
 
@@ -16,53 +16,34 @@ public class PercolationTest {
         percolation = new Percolation(SIDE_SIZE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldFailOnZeroSize() {
-        new Percolation(0);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldFailOnLessThanZeroSize() {
-        new Percolation(-2);
-    }
-
     @Test
-    public void shouldPreparePercolationGrid() throws Exception {
-        int gridSize = SIDE_SIZE * SIDE_SIZE;
-        assertTrue("should initialize grid with size " + gridSize, gridSize == percolation.getGrid().length);
-        printGrid();
-    }
-
-    @Test
-    @Ignore
-    public void isOpen() throws Exception {
-
-    }
-
-    @Test
-    @Ignore
-    public void isFull() throws Exception {
-
-    }
-
-    @Test
-    @Ignore
-    public void numberOfOpenSites() throws Exception {
-
-    }
-
-    @Test
-    @Ignore
-    public void percolates() throws Exception {
-
-    }
-
-    private void printGrid() throws Exception {
-        int[] percolationGrid = percolation.getGrid();
-        for (int i = 0; i < percolationGrid.length; i++) {
-            String tail = (i + 1) % SIDE_SIZE == 0 ? "\n" : "\t";
-            System.out.print(percolationGrid[i] + tail);
+    public void shouldPercolate() throws Exception {
+        while (!percolation.percolates()) {
+            int row = StdRandom.uniform(1, SIDE_SIZE + 1);
+            int col = StdRandom.uniform(1, SIDE_SIZE + 1);
+            percolation.open(row, col);
         }
+        int numberOfOpenSites = percolation.numberOfOpenSites();
+        double totalSites = Math.pow(SIDE_SIZE, 2);
+        double threshold = (double) numberOfOpenSites / totalSites;
+        System.out.println("threshold: " + threshold + " (" + numberOfOpenSites + "/" + totalSites + ")");
+        assertTrue(threshold > 0);
     }
 
+    @Test
+    public void shouldOpen() throws Exception {
+        int row = StdRandom.uniform(1, SIDE_SIZE + 1);
+        int col = StdRandom.uniform(1, SIDE_SIZE + 1);
+        percolation.open(row, col);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionWithZeroColumn() throws Exception {
+        percolation.open(0, 5);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowExceptionWithNegativeRow() throws Exception {
+        percolation.open(1, -1);
+    }
 }
