@@ -1,53 +1,76 @@
 package com.vsoltys.coursera.algorithms;
 
 
+import edu.princeton.cs.algs4.WeightedQuickUnionUF;
+
 /**
  * Programming Assignment 1: Percolation
  *
  * @author: vsoltys
  * @details: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
- *
+ * <p>
  * By convention, the row and column indices are integers between 1 and n, where (1, 1) is the upper-left site
  * IndexOutOfBoundsException is thrown if any argument to open(), isOpen(), or isFull() is outside its prescribed range
  */
 public class Percolation {
 
-    private int[] grid;
-    private int gridSize;
+    // size of the grid
+    private final int sideSize;
+
+    // tracks open/blocked site state: false when blocked, true otherwise
+    private final boolean[] grid;
+
+    // virtual top and bottom sites: two last cells in data structure
+    private final int virtualTop;
+    private final int virtualBottom;
+
+    // Union-Find data structure and algorithm
+    private WeightedQuickUnionUF algorithm;
+
+    // number of open sites
     private int numberOfOpenSites;
-    private int virtualTop;
-    private int virtualGround;
 
     /**
-     * creates n-by-n grid, with all sites blocked
+     * Creates n-by-n grid, with all sites blocked
+     *
      * @param n size of grid
      */
     public Percolation(int n) {
-        isTrue(n > 0, "n should be more than 0");
-        this.gridSize = n;
+        if (n < 1) {
+            throw new IllegalArgumentException("n should be more than 0");
+        }
 
-        grid = new int[gridSize * gridSize];
-        virtualTop = 0;
-        virtualGround = grid.length - 1;
+        sideSize = n;
+        int gridSize = sideSize * sideSize;
+
+        grid = new boolean[gridSize];
+        algorithm = new WeightedQuickUnionUF(gridSize + 2);
+        virtualTop = gridSize;
+        virtualBottom = virtualTop + 1;
     }
 
     /**
+     * Returns true if site (row, col) is open, false otherwise
+     *
      * @param row row index
      * @param col column index
      * @return true if site(row, column) is open
      */
     public boolean isOpen(int row, int col) {
         validateCoordinates(row, col);
-        return getValue(row, col) > 0;
+        return isSiteOpen(row, col);
     }
 
     /**
+     * A full site is an open site that can be connected to an open site in the top row
+     * via a chain of neighboring (left, right, up, down) open sites.
+     *
      * @param row row index
      * @param col column index
      * @return true if site(row, column) is full
      */
     public boolean isFull(int row, int col) {
-        return !isOpen(row, col);
+        return algorithm.connected(mapToIndex(row, col), virtualTop);
     }
 
     /**
@@ -58,95 +81,97 @@ public class Percolation {
     }
 
     /**
+     * Check if system percolates: there is a full site in the bottom row
+     *
      * @return true if system percolates
      */
     public boolean percolates() {
-        return grid[virtualTop] == 0 ? false : connected(virtualTop, virtualGround);
+        return algorithm.connected(virtualTop, virtualBottom);
     }
 
-    // open site (row, col) if it is not open already
+    /**
+     * Opens a site (row, col) if it is not opened already
+     * and connects it with its neighbor open sites
+     *
+     * @param row row index
+     * @param col column index
+     */
     public void open(int row, int col) {
         validateCoordinates(row, col);
-        int position = mapToGrid(row, col); // cell id
-        int value = getValue(row, col);
-        if (value == 0) {                               // if closed
-            value = row == 1 ? 1 :                      // top row: virtual top id
-                    row == gridSize ? grid.length - 1 : // ground row: virtual ground id
-                            position + 1;               // or cell value
+        int position = mapToIndex(row, col);
+        if (isSiteOpen(row, col)) {
+            return;
+        }
 
-            grid[position] = value;
-            numberOfOpenSites++;
-            connectNeighborSites(row, col);
+        // open site in percolation grid
+        grid[position] = true;
+        numberOfOpenSites++;
+
+        // connect left cell
+        if (isSiteOpen(row, col - 1)) {
+            algorithm.union(position, mapToIndex(row, col - 1));
+        }
+
+        // connect right cell
+        if (isSiteOpen(row, col + 1)) {
+            algorithm.union(position, mapToIndex(row, col + 1));
+        }
+
+        // connect open (or virtual) top
+        if (row == 1) {
+            algorithm.union(position, virtualTop);
+        } else if (isSiteOpen(row - 1, col)) {
+            algorithm.union(position, mapToIndex(row - 1, col));
+        }
+
+        // connect open (or virtual) bottom
+        if (row == sideSize) {
+            algorithm.union(position, virtualBottom);
+        } else if (isSiteOpen(row + 1, col)) {
+            algorithm.union(position, mapToIndex(row + 1, col));
         }
     }
 
-    private void connectNeighborSites(int row, int col) {
-        int position = mapToGrid(row, col); // cell id
-
-        // if left opened
-        if (getValue(row, col - 1) > 0) {
-            union(position, mapToGrid(row, col - 1));
-        }
-        // if right opened
-        if (getValue(row, col + 1) > 0) {
-            union(position, mapToGrid(row, col + 1));
-        }
-
-        // if top opened
-        int topValue = getValue(row - 1, col);
-        if (topValue > 0) {
-            union(position, mapToGrid(row - 1, col));
-        } else if (topValue < 0) {
-            // -1; opened top row
-            virtualTop = position;
-        }
-
-        // if bottom opened
-        int bottomValue = getValue(row + 1, col);
-        if (bottomValue > 0) {
-            union(position, mapToGrid(row + 1, col));
-        } else if (bottomValue < 0) {
-            // -1; opened ground row
-            virtualGround = position;
-        }
-    }
-
-    private boolean connected(int p, int q) {
-        return grid[p] == grid[q];
-    }
-
-    private void union(int p, int q) {
-        int pid = grid[p];
-        int qid = grid[q];
-        for (int i = 0; i < grid.length; i++) {
-            if (grid[i] == pid) {
-                grid[i] = qid;
-            }
-        }
-    }
-
-    private void validateCoordinates(int row, int col) {
-        isTrue(row > 0 && row <= gridSize, "row should be in range [0, " + gridSize + "]");
-        isTrue(col > 0 && col <= gridSize, "col should be in range [0, " + gridSize + "]");
-    }
-
-    // use -1 to ignore/cutoff out of bounds access
-    private int getValue(int row, int col) {
-        int index = mapToGrid(row, col);
-        return index > -1 ? grid[index] : -1;
-    }
-
-    // returns -1 if col/row out of range
-    private int mapToGrid(int row, int col) {
-        if (row > 0 && row <= gridSize && col > 0 && col <= gridSize) {
-            return gridSize * --row + --col;
+    /**
+     * Maps 2d (row, col) coordinates to 1d index. Parameters should be within boundaries.
+     *
+     * @param row row index
+     * @param col column index
+     * @return mapped 1d index if params are within boundaries. -1 otherwise
+     */
+    private int mapToIndex(int row, int col) {
+        if (row > 0 && row <= sideSize && col > 0 && col <= sideSize) {
+            return sideSize * --row + --col;
         }
         return -1;
     }
 
-    private static void isTrue(boolean expression, String message) {
-        if (!expression) {
-            throw new IllegalArgumentException(message);
+    /**
+     * Checks if site (row, col) is open
+     *
+     * @param row row index
+     * @param col column index
+     * @return true if site (row, col) is open, false otherwise
+     */
+    private boolean isSiteOpen(int row, int col) {
+        int index = mapToIndex(row, col);
+        return index >= 0 && grid[index]; // handle boundary sites: always closed
+    }
+
+    /**
+     * Validates that coordinates (row, col) are within boundaries
+     *
+     * @param row row index
+     * @param col column index
+     */
+    private void validateCoordinates(int row, int col) {
+        isValidIndex(row, "row should be in range [1, " + sideSize + "]");
+        isValidIndex(col, "col should be in range [1, " + sideSize + "]");
+    }
+
+    private void isValidIndex(int index, String message) {
+        if (index < 1 || index > sideSize) {
+            throw new IndexOutOfBoundsException(message);
         }
     }
 }

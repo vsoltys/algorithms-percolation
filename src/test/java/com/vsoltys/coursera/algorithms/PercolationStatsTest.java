@@ -6,12 +6,12 @@ import static org.junit.Assert.assertTrue;
 
 public class PercolationStatsTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void shouldThrowExceptionWithZeroNParameter() throws Exception {
         new PercolationStats(0, 1);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void shouldThrowExceptionWithZeroTrialsParameter() throws Exception {
         new PercolationStats(1, 0);
     }
@@ -19,7 +19,7 @@ public class PercolationStatsTest {
     @Test
     public void shouldCollectPercolationStats() throws Exception {
         int size = 200;
-        int trials = 10;
+        int trials = 100;
         PercolationStats percolationStats = new PercolationStats(size, trials);
         double meanPercolationThreshold = percolationStats.mean();
         double standardDeviation = percolationStats.stddev();
