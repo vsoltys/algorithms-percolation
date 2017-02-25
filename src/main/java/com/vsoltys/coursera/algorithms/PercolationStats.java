@@ -48,7 +48,7 @@ public class PercolationStats {
         System.out.println("95% confidence interval = [" + stats.confidenceLo() + ", " + stats.confidenceHi() + "]");
     }
 
-    void runExperiment() {
+    private void runExperiment() {
         for (int trial = 0; trial < trials; trial++) {
             Percolation percolation = new Percolation(sideSize);
             while (!percolation.percolates()) {
