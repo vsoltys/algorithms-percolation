@@ -107,25 +107,25 @@ public class Percolation {
         grid[position] = true;
         numberOfOpenSites++;
 
-        // connect left cell
+        // connect left cell site
         if (isSiteOpen(row, col - 1)) {
             algorithm.union(position, mapToIndex(row, col - 1));
         }
 
-        // connect right cell
+        // connect right cell site
         if (isSiteOpen(row, col + 1)) {
             algorithm.union(position, mapToIndex(row, col + 1));
         }
 
-        // connect open (or virtual) top
+        // connect open (or virtual) top site
         if (row == 1) {
             algorithm.union(position, virtualTop);
         } else if (isSiteOpen(row - 1, col)) {
             algorithm.union(position, mapToIndex(row - 1, col));
         }
 
-        // connect open (or virtual) bottom
-        if (row == sideSize) {
+        // connect open (or virtual) bottom site avoiding backwash cases
+        if (row == sideSize && algorithm.connected(position, virtualTop)) {
             algorithm.union(position, virtualBottom);
         } else if (isSiteOpen(row + 1, col)) {
             algorithm.union(position, mapToIndex(row + 1, col));
