@@ -18,7 +18,7 @@ public class PercolationStatsTest {
 
     @Test
     public void shouldCollectPercolationStats() throws Exception {
-        int size = 200;
+        int size = 1000;
         int trials = 100;
         PercolationStats percolationStats = new PercolationStats(size, trials);
         double meanPercolationThreshold = percolationStats.mean();
@@ -29,6 +29,7 @@ public class PercolationStatsTest {
         System.out.println("mean                    = " + meanPercolationThreshold);
         System.out.println("stddev                  = " + standardDeviation);
         System.out.println("95% confidence interval = [" + lowEndpointConfidenceInterval + ", " + hiEndpointConfidenceInterval + "]");
+        System.out.println("wallclock time          = " + percolationStats.getWallclockTime() + " second(s)");
 
         assertTrue(meanPercolationThreshold > 0);
         assertTrue(standardDeviation > 0);

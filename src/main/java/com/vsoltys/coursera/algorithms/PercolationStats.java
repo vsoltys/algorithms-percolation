@@ -2,6 +2,7 @@ package com.vsoltys.coursera.algorithms;
 
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
+import edu.princeton.cs.algs4.Stopwatch;
 
 /**
  * Programming Assignment 1: Percolation
@@ -18,6 +19,7 @@ public class PercolationStats {
     private double standardDeviation;
     private double lowEndpointConfidenceInterval;
     private double hiEndpointConfidenceInterval;
+    private double wallclockTime;
 
     // perform trials independent experiments on an n-by-n grid
     public PercolationStats(int n, int trials) {
@@ -49,11 +51,14 @@ public class PercolationStats {
     }
 
     private void runExperiment() {
+        double[] elapsedTimes = new double[trials];
         for (int trial = 0; trial < trials; trial++) {
+            Stopwatch stopwatch = new Stopwatch();
             Percolation percolation = new Percolation(sideSize);
             while (!percolation.percolates()) {
                 percolation.open(getRandomValue(), getRandomValue());
             }
+            elapsedTimes[trial] = stopwatch.elapsedTime();
             int numberOfOpenSites = percolation.numberOfOpenSites();
             thresholds[trial] = (double) numberOfOpenSites / Math.pow(sideSize, 2);
         }
@@ -62,6 +67,9 @@ public class PercolationStats {
         standardDeviation = StdStats.stddev(thresholds);
         lowEndpointConfidenceInterval = (meanPercolationThreshold - (1.96 * standardDeviation)) / Math.sqrt(trials);
         hiEndpointConfidenceInterval = (meanPercolationThreshold + (1.96 * standardDeviation)) / Math.sqrt(trials);
+
+        // calculate average time
+        wallclockTime = StdStats.mean(elapsedTimes);
     }
 
     /**
@@ -94,5 +102,10 @@ public class PercolationStats {
 
     private int getRandomValue() {
         return StdRandom.uniform(1, sideSize + 1);
+    }
+
+
+    public double getWallclockTime() {
+        return wallclockTime;
     }
 }
