@@ -1,16 +1,19 @@
 package com.vsoltys.coursera.algorithms;
 
-
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 /**
  * Programming Assignment 1: Percolation
+ * <p>
+ * The model of a percolation system.
+ * By convention, the row and column indices are integers between 1 and n,
+ * where (1, 1) is the upper-left site.
+ * IndexOutOfBoundsException is thrown if any argument to open(), isOpen(), or isFull()
+ * is outside its prescribed range
  *
  * @author: vsoltys
- * @details: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
+ * @see: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
  * <p>
- * By convention, the row and column indices are integers between 1 and n, where (1, 1) is the upper-left site
- * IndexOutOfBoundsException is thrown if any argument to open(), isOpen(), or isFull() is outside its prescribed range
  */
 public class Percolation {
 
@@ -26,6 +29,9 @@ public class Percolation {
 
     // Union-Find data structure and algorithm
     private WeightedQuickUnionUF algorithm;
+
+    // additional structure for visualisation (without virtual bottom site)
+    private WeightedQuickUnionUF visualization;
 
     // number of open sites
     private int numberOfOpenSites;
@@ -44,6 +50,7 @@ public class Percolation {
         int gridSize = sideSize * sideSize;
 
         grid = new boolean[gridSize];
+        visualization = new WeightedQuickUnionUF(gridSize + 1);
         algorithm = new WeightedQuickUnionUF(gridSize + 2);
         virtualTop = gridSize;
         virtualBottom = virtualTop + 1;
@@ -58,7 +65,7 @@ public class Percolation {
      */
     public boolean isOpen(int row, int col) {
         validateCoordinates(row, col);
-        return isSiteOpen(row, col);
+        return isSiteOpen(mapToIndex(row, col));
     }
 
     /**
@@ -70,7 +77,7 @@ public class Percolation {
      * @return true if site(row, column) is full
      */
     public boolean isFull(int row, int col) {
-        return algorithm.connected(mapToIndex(row, col), virtualTop);
+        return visualization.connected(mapToIndex(row, col), virtualTop);
     }
 
     /**
@@ -86,7 +93,8 @@ public class Percolation {
      * @return true if system percolates
      */
     public boolean percolates() {
-        return algorithm.connected(virtualTop, virtualBottom);
+        boolean connected = algorithm.connected(virtualTop, virtualBottom);
+        return connected;
     }
 
     /**
@@ -99,7 +107,7 @@ public class Percolation {
     public void open(int row, int col) {
         validateCoordinates(row, col);
         int position = mapToIndex(row, col);
-        if (isSiteOpen(row, col)) {
+        if (isSiteOpen(position)) {
             return;
         }
 
@@ -108,28 +116,44 @@ public class Percolation {
         numberOfOpenSites++;
 
         // connect left cell site
-        if (isSiteOpen(row, col - 1)) {
-            algorithm.union(position, mapToIndex(row, col - 1));
+        int left = mapToIndex(row, col - 1);
+        if (isSiteOpen(left)) {
+            union(position, left);
         }
 
         // connect right cell site
-        if (isSiteOpen(row, col + 1)) {
-            algorithm.union(position, mapToIndex(row, col + 1));
+        int right = mapToIndex(row, col + 1);
+        if (isSiteOpen(right)) {
+            union(position, right);
         }
 
         // connect open (or virtual) top site
+        int top = mapToIndex(row - 1, col);
         if (row == 1) {
-            algorithm.union(position, virtualTop);
-        } else if (isSiteOpen(row - 1, col)) {
-            algorithm.union(position, mapToIndex(row - 1, col));
+            union(position, virtualTop);
+        } else if (isSiteOpen(top)) {
+            union(position, top);
         }
 
-        // connect open (or virtual) bottom site avoiding backwash cases
-        if (row == sideSize && algorithm.connected(position, virtualTop)) {
+        // connect open (or virtual) bottom site
+        int bottom = mapToIndex(row + 1, col);
+        if (row == sideSize) {
+            // do not connect virtual bottom in visualization structure
             algorithm.union(position, virtualBottom);
-        } else if (isSiteOpen(row + 1, col)) {
-            algorithm.union(position, mapToIndex(row + 1, col));
+        } else if (isSiteOpen(bottom)) {
+            union(position, bottom);
         }
+    }
+
+    /**
+     * Connects one site with its neighbor sites
+     *
+     * @param position site index
+     * @param neighbor neighbor site index
+     */
+    private void union(int position, int neighbor) {
+        algorithm.union(position, neighbor);
+        visualization.union(position, neighbor);
     }
 
     /**
@@ -149,13 +173,11 @@ public class Percolation {
     /**
      * Checks if site (row, col) is open
      *
-     * @param row row index
-     * @param col column index
+     * @param index 1d index mapped from (row, col)
      * @return true if site (row, col) is open, false otherwise
      */
-    private boolean isSiteOpen(int row, int col) {
-        int index = mapToIndex(row, col);
-        return index >= 0 && grid[index]; // handle boundary sites: always closed
+    private boolean isSiteOpen(int index) {
+        return index >= 0 && grid[index]; // handle boundary sites
     }
 
     /**
