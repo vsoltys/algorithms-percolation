@@ -6,9 +6,14 @@ import edu.princeton.cs.algs4.Stopwatch;
 
 /**
  * Programming Assignment 1: Percolation
+ * <p>
+ * <code>PercolationStats</code> performs T independent
+ * computational experiments on an n-by-n grid, and prints the sample
+ * meanPercolationThreshold, sample standard deviation, and the 95% confidence interval
+ * for the percolation threshold
  *
  * @author: vsoltys
- * @details: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
+ * @see: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html
  **/
 public class PercolationStats {
     private int sideSize;
@@ -21,10 +26,16 @@ public class PercolationStats {
     private double hiEndpointConfidenceInterval;
     private double wallclockTime;
 
-    // perform trials independent experiments on an n-by-n grid
+    /**
+     * Initialize <code>PercolationStats</code> to run <code>trials</code> experiments on an n-by-n grid
+     *
+     * @param n      side size of the grid
+     * @param trials number of trials
+     */
     public PercolationStats(int n, int trials) {
         if (n <= 0 || trials <= 0) {
-            throw new IllegalArgumentException("params should be greater that 0. n=" + n + ", trials=" + trials);
+            throw new IllegalArgumentException("Parameters should be greater that 0. n=" + n
+                    + ", trials=" + trials);
         }
 
         this.sideSize = n;
@@ -36,8 +47,9 @@ public class PercolationStats {
 
     /**
      * main() method that takes two command-line arguments n and T, performs T independent
-     * computational experiments (discussed above) on an n-by-n grid, and prints the sample meanPercolationThreshold,
-     * sample standard deviation, and the 95% confidence interval for the percolation threshold
+     * computational experiments on an n-by-n grid, and prints the sample
+     * meanPercolationThreshold, sample standard deviation, and the 95% confidence interval
+     * for the percolation threshold
      */
     public static void main(String[] args) {
         int n = Integer.parseInt(args[0]);
@@ -65,10 +77,11 @@ public class PercolationStats {
 
         meanPercolationThreshold = StdStats.mean(thresholds);
         standardDeviation = StdStats.stddev(thresholds);
-        lowEndpointConfidenceInterval = (meanPercolationThreshold - (1.96 * standardDeviation)) / Math.sqrt(trials);
-        hiEndpointConfidenceInterval = (meanPercolationThreshold + (1.96 * standardDeviation)) / Math.sqrt(trials);
 
-        // calculate average time
+        double interval = 1.96 * standardDeviation / Math.sqrt(trials);
+        lowEndpointConfidenceInterval = meanPercolationThreshold - interval;
+        hiEndpointConfidenceInterval = meanPercolationThreshold + interval;
+
         wallclockTime = StdStats.mean(elapsedTimes);
     }
 
@@ -103,7 +116,6 @@ public class PercolationStats {
     private int getRandomValue() {
         return StdRandom.uniform(1, sideSize + 1);
     }
-
 
     public double getWallclockTime() {
         return wallclockTime;

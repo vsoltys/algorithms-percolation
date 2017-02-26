@@ -23,11 +23,10 @@ public class PercolationTest {
             int col = StdRandom.uniform(1, SIDE_SIZE + 1);
             percolation.open(row, col);
         }
-        int numberOfOpenSites = percolation.numberOfOpenSites();
-        double totalSites = Math.pow(SIDE_SIZE, 2);
-        double threshold = (double) numberOfOpenSites / totalSites;
-        System.out.println("threshold: " + threshold + " (" + numberOfOpenSites + "/" + totalSites + ")");
+
+        double threshold = (double) percolation.numberOfOpenSites() / Math.pow(SIDE_SIZE, 2);
         assertTrue(threshold > 0);
+        System.out.println("threshold: " + threshold);
     }
 
     @Test
@@ -37,13 +36,14 @@ public class PercolationTest {
         percolation.open(row, col);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void shouldThrowExceptionWithZeroColumn() throws Exception {
         percolation.open(0, 5);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void shouldThrowExceptionWithNegativeRow() throws Exception {
         percolation.open(1, -1);
     }
 }
+
