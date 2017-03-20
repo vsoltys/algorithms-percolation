@@ -84,3 +84,7 @@ gradle-app.setting
 # Gradle's dependency management doesn't currently offer a way to download
 # from an arbitrary URL: algorithms dependency are moved to ./resources
 !src/main/resources/*.jar
+/gradlew
+/gradlew.bat
+/.idea/
+/gradle/
